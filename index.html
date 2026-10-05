@@ -105,6 +105,14 @@ h2{font-size:21px;margin:0 0 4px;font-weight:600}
 .tag{display:inline-block;font-size:12px;padding:0 8px;border-radius:20px;border:2px solid #000;background:var(--tc,var(--accent));color:#000;font-weight:700;margin-right:6px}
 .empty{padding:28px 16px;text-align:center;color:var(--muted);font-weight:500}
 .empty .btn{margin-top:12px}
+.pick-h{font-size:15px;font-weight:500;margin:0 0 10px}
+.people{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;max-height:330px;overflow-y:auto;padding:4px 8px 8px 4px;margin:0 -8px 0 -4px}
+.person{display:flex;flex-direction:column;align-items:flex-start;gap:0;text-align:left;border:var(--bw) solid var(--border);background:var(--surface);border-radius:var(--radius-s);padding:8px 12px;box-shadow:var(--sh-s);cursor:pointer;min-height:56px;transition:transform .08s,box-shadow .08s}
+.person b{font-size:15px;line-height:1.3}
+.person span{font-size:12px;color:var(--muted);line-height:1.35}
+.person:hover{background:var(--accent);color:#000;transform:translate(-1px,-1px);box-shadow:var(--sh)}
+.person:hover span{color:#000}
+.person:active{transform:translate(2px,2px);box-shadow:none}
 /* lookup */
 .daygroup{margin-bottom:20px}
 .daygroup h3{display:inline-block;font-size:14px;margin:0 0 8px;font-weight:500;background:#000;color:var(--accent);padding:2px 10px;border-radius:var(--radius-s)}
@@ -371,9 +379,11 @@ function vRecords(){
   const rows=recRows(st.rec);const label=REC.find(r=>r[0]===st.rec)[1];
   return `<div class="bar"><div class="seg" role="group">${REC.map(([k,l])=>`<button type="button" data-act="rec" data-k="${k}" aria-pressed="${st.rec===k}">${l}</button>`).join('')}</div>
     <button class="btn primary" data-act="form" data-k="${st.rec}">เพิ่ม${label}</button></div>
-  <div class="bar"><input class="inp" type="search" placeholder="กรองตามชื่อพนักงาน" value="${esc(st.q)}" data-act="q">
-    <select class="inp" data-act="branch">${branchOpts(st.branch)}</select>
-    <button class="btn" data-act="csvRec">ส่งออก CSV</button></div>
+  <div class="bar"><input class="inp" type="search" placeholder="ค้นหาชื่อ ชื่อเล่น หรือรหัส" value="${esc(st.q)}" data-act="q">
+    <select class="inp" data-act="branch">${branchOpts(st.branch)}</select></div>
+  <h3 class="pick-h">แตะชื่อเพื่อบันทึก${label}</h3>
+  <div class="people">${filteredEmps().map(e=>`<button type="button" class="person" data-act="form" data-k="${st.rec}" data-emp="${e.id}"><b>${esc(e.nick||e.name)}</b><span>${esc(e.nick?e.name:'')}${e.nick?' · ':''}${esc(e.branch||'')}</span></button>`).join('')||'<div class="empty">ไม่พบพนักงานตามที่ค้นหา</div>'}</div>
+  <div class="bar" style="justify-content:space-between;margin-top:22px"><h2 style="margin:0">${label}ปี ${be(st.year)}</h2><button class="btn small" data-act="csvRec">ส่งออก CSV</button></div>
   <p class="sub">${label}ปี ${be(st.year)} ทั้งหมด ${rows.length} รายการ</p>
   <div class="list">${rows.map(ITEM[st.rec]).join('')||`<div class="empty">ยังไม่มี${label}ในปีนี้</div>`}</div>`;
 }
@@ -452,9 +462,10 @@ function empOpts(sel){return '<option value="">เลือกพนักงา
 const opts=(arr,sel)=>arr.map(v=>`<option ${v===sel?'selected':''}>${esc(v)}</option>`).join('');
 const fld=(label,html,cls='')=>`<label class="f ${cls}">${label}${html}</label>`;
 const common=r=>fld('เลขที่เอกสาร / ใบลา',`<input class="inp" name="docNo" value="${esc(r.docNo)}" placeholder="ตรงกับใบกระดาษ">`)+fld('ผู้อนุมัติ',`<input class="inp" name="approver" value="${esc(r.approver??(conn.user||''))}">`);
-function openForm(k,id){
+function openForm(k,id,pre){
   const tbl={leave:'leaves',sale:'sales',swap:'swaps',warning:'warnings',employee:'employees'}[k];
   const r=id?clone(db[tbl].find(x=>x.id===id)||{}):{};const t=todayISO();let body='',title='';
+  if(!id&&pre){const fk={leave:'empId',warning:'empId',sale:'sellerId',swap:'aId'}[k];if(fk)r[fk]=pre}
   if(k==='employee'){title=id?'แก้ไขข้อมูลพนักงาน':'เพิ่มพนักงาน';body=
     fld('ชื่อ-นามสกุล *',`<input class="inp" name="name" required value="${esc(r.name)}">`,'full')+
     fld('ชื่อเล่น',`<input class="inp" name="nick" value="${esc(r.nick)}">`)+fld('รหัสพนักงาน',`<input class="inp" name="code" value="${esc(r.code)}">`)+
@@ -560,7 +571,7 @@ function openDetail(id){
   <tr><td>ใบเตือน</td><td class="num ${s.warns?'over':''}" colspan="3">${s.warns} ครั้ง</td></tr></tbody></table>
   <h2 style="font-size:16px">รายการทั้งหมดในปี</h2><div class="list">${ev.map(x=>x[1]).join('')||'<div class="empty">ไม่มีรายการในปีนี้</div>'}</div>
   <p class="hint" style="margin-top:12px">พิมพ์เมื่อ ${fdt(new Date().toISOString())}</p></div>
-  <div class="mfoot"><button type="button" class="btn" data-act="print">พิมพ์ / บันทึก PDF</button><button type="button" class="btn primary" data-act="close">ปิด</button></div>`;
+  <div class="mfoot" style="flex-wrap:wrap"><span style="margin-right:auto;display:flex;gap:6px;flex-wrap:wrap">${REC.map(([k,l])=>`<button type="button" class="btn small" data-act="form" data-k="${k}" data-emp="${e.id}">+ ${l}</button>`).join('')}</span><button type="button" class="btn" data-act="print">พิมพ์ / บันทึก PDF</button><button type="button" class="btn primary" data-act="close">ปิด</button></div>`;
   d.showModal();
 }
 
@@ -597,7 +608,7 @@ document.addEventListener('click',async ev=>{
   if(a==='tab'){st.view=b.dataset.k;render();try{window.scrollTo(0,0)}catch(e){}}
   else if(a==='yr'){st.year+=+b.dataset.d;render()}
   else if(a==='rec'){st.rec=b.dataset.k;render()}
-  else if(a==='form')openForm(b.dataset.k,b.dataset.id);
+  else if(a==='form')openForm(b.dataset.k,b.dataset.id,b.dataset.emp);
   else if(a==='detail')openDetail(b.dataset.id);
   else if(a==='close')$('#dlg').close();
   else if(a==='del')del(b.dataset.k,b.dataset.id);
