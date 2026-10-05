@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ทะเบียนวันลาและเวร</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Mitr:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#DCE8FF;--dot:#B9CDF5;--surface:#FFFFFF;--sunk:#FFF4C2;--ink:#000000;--muted:#3D3D3D;--line:#000000;--border:#000000;--shadow:#000000;
+  --accent:#FFD23F;--accent-ink:#000000;--hover:#FFF4C2;
+  --c-sick:#FF6B6B;--c-personal:#FFB830;--c-vacation:#2FD69A;--c-maternity:#C792EA;--c-unpaid:#B8C2CC;--c-other:#8EC5D6;
+  --c-sale:#6E95FF;--c-swap:#3BD1E6;--c-warn:#FF4D6D;
+  --bw:2.5px;--sh:4px 4px 0 var(--shadow);--sh-s:2px 2px 0 var(--shadow);
+  --radius-s:8px;--radius-m:12px;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#17171C;--dot:#2A2A33;--surface:#24242C;--sunk:#30302A;--ink:#F5F5F0;--muted:#C9C9C2;--line:#F5F5F0;--border:#F5F5F0;--shadow:#F5F5F0;--hover:#33332B;}}
+:root[data-theme="dark"]{
+  --bg:#17171C;--dot:#2A2A33;--surface:#24242C;--sunk:#30302A;--ink:#F5F5F0;--muted:#C9C9C2;--line:#F5F5F0;--border:#F5F5F0;--shadow:#F5F5F0;--hover:#33332B;}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);background-image:radial-gradient(var(--dot) 1.5px,transparent 1.5px);background-size:22px 22px;color:var(--ink);font-family:"IBM Plex Sans Thai","Noto Sans Thai",Tahoma,sans-serif;font-size:15px;line-height:1.6;-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--c-sale);outline-offset:2px}
+.wrap{max-width:1100px;margin:0 auto;padding:0 16px}
+header.top{padding:22px 0 10px}
+.org{display:inline-block;font-size:13px;font-weight:600;background:var(--c-swap);color:#000;border:var(--bw) solid var(--border);padding:1px 10px;border-radius:20px;box-shadow:var(--sh-s)}
+h1,h2,h3,h4{font-family:"Mitr","IBM Plex Sans Thai",Tahoma,sans-serif}
+h1{font-size:32px;line-height:1.15;margin:10px 0 0;font-weight:600;letter-spacing:-.01em}
+.toprow{display:flex;gap:12px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap}
+.yearpick{display:flex;align-items:center;gap:0;background:var(--accent);color:#000;border:var(--bw) solid var(--border);border-radius:var(--radius-s);box-shadow:var(--sh);overflow:hidden}
+.yearpick button{border:0;background:transparent;width:42px;height:42px;cursor:pointer;font-size:20px;font-weight:700;color:#000}
+.yearpick button:hover{background:#000;color:var(--accent)}
+.yearpick strong{font-family:"Mitr",sans-serif;font-size:20px;min-width:92px;text-align:center;border-left:var(--bw) solid #000;border-right:var(--bw) solid #000;line-height:42px}
+.mode{font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;margin-top:8px;background:var(--surface);border:2px solid var(--border);padding:1px 10px;border-radius:20px}
+.mode i{width:10px;height:10px;border-radius:50%;background:var(--c-unpaid);border:2px solid #000;display:inline-block}
+.mode.online i{background:var(--c-vacation)}.mode.error i{background:var(--c-warn)}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--surface);border-top:var(--bw) solid var(--border);border-bottom:var(--bw) solid var(--border);padding-top:env(safe-area-inset-top,0px);margin-top:12px}
+nav.tabs .wrap{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-top:8px;padding-bottom:8px}
+nav.tabs button{border:2px solid transparent;background:none;padding:6px 14px;white-space:nowrap;cursor:pointer;font-weight:600;border-radius:var(--radius-s)}
+nav.tabs button:hover{border-color:var(--border)}
+nav.tabs button[aria-current="true"]{background:#000;color:var(--accent);border-color:#000}
+main{padding:20px 0 80px}
+h2{font-size:21px;margin:0 0 4px;font-weight:600}
+.sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.inp,select.inp,textarea.inp{border:var(--bw) solid var(--border);background:var(--surface);border-radius:var(--radius-s);padding:8px 10px;min-height:42px;width:100%;box-shadow:var(--sh-s)}
+.inp:focus{outline:none;box-shadow:var(--sh);background:var(--hover)}
+.bar .inp{width:auto;flex:1 1 160px}
+.btn{border:var(--bw) solid var(--border);background:var(--surface);border-radius:var(--radius-s);padding:8px 16px;min-height:42px;cursor:pointer;font-weight:700;white-space:nowrap;box-shadow:var(--sh);transition:transform .08s,box-shadow .08s}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--shadow)}
+.btn:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--shadow)}
+.btn.primary{background:var(--accent);color:#000}
+.btn.danger{background:var(--c-warn);color:#000}
+.btn.small{min-height:32px;padding:3px 10px;font-size:13px;box-shadow:var(--sh-s)}
+.btn.small:active{transform:translate(2px,2px)}
+.panel{background:var(--surface);border:var(--bw) solid var(--border);border-radius:var(--radius-m);padding:18px;margin-bottom:20px;box-shadow:var(--sh)}
+.totals{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-bottom:20px}
+.totals div{padding:10px 14px;border:var(--bw) solid var(--border);border-radius:var(--radius-m);background:var(--surface);box-shadow:var(--sh)}
+.totals b{display:block;font-family:"Mitr",sans-serif;font-size:26px;font-weight:600;line-height:1.2}
+.totals span{font-size:12px;font-weight:600}
+.swatch{display:inline-block;width:12px;height:12px;border-radius:3px;border:2px solid #000;margin-right:6px;vertical-align:-1px}
+/* Employee ledger rows */
+.ledger{border:var(--bw) solid var(--border);border-radius:var(--radius-m);background:var(--surface);overflow:hidden;box-shadow:6px 6px 0 var(--shadow)}
+.lhead,.lrow{display:grid;grid-template-columns:minmax(170px,1.3fr) 70px 70px minmax(170px,1.4fr) 64px 92px 60px;gap:10px;align-items:center;padding:11px 14px}
+.lhead{font-size:13px;font-weight:700;background:var(--accent);color:#000;border-bottom:var(--bw) solid var(--border)}
+.lrow{border-bottom:2px solid var(--border);cursor:pointer;background:none;border-left:0;border-right:0;border-top:0;width:100%;text-align:left}
+.lrow:last-child{border-bottom:0}
+.lrow:hover{background:var(--hover)}
+.ename{font-weight:700;line-height:1.3}
+.emeta{font-size:12px;color:var(--muted)}
+.num{font-variant-numeric:tabular-nums;font-weight:600}
+.frac small{color:var(--muted);font-weight:500}
+.over{color:#000;background:var(--c-warn);padding:0 6px;border-radius:4px;border:2px solid #000;font-weight:700}
+.tiles{display:flex;flex-wrap:wrap;gap:3px;align-items:center}
+.tile{width:15px;height:15px;border-radius:3px;border:2px solid var(--border);background:var(--surface)}
+.tile.full{background:var(--c-vacation)}
+.tile.half{background:linear-gradient(90deg,var(--c-vacation) 50%,var(--surface) 50%)}
+.tile.over{background:var(--c-warn);padding:0}
+.tiles em{font-style:normal;font-size:12px;font-weight:600;margin-left:4px}
+.lbl-m{display:none;font-size:11px;font-weight:600;color:var(--muted)}
+@media (max-width:760px){
+  .lhead{display:none}
+  .lrow{grid-template-columns:repeat(3,1fr);row-gap:8px}
+  .lrow .c-name{grid-column:1/-1}
+  .lrow .c-vac{grid-column:1/-1}
+  .lbl-m{display:block}
+}
+/* records */
+.seg{display:inline-flex;border:var(--bw) solid var(--border);border-radius:var(--radius-s);overflow:hidden;background:var(--surface);flex-wrap:wrap;box-shadow:var(--sh)}
+.seg button{border:0;background:none;padding:8px 14px;cursor:pointer;font-weight:700;border-right:var(--bw) solid var(--border)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:#000;color:var(--accent)}
+.list{display:flex;flex-direction:column;border:var(--bw) solid var(--border);border-radius:var(--radius-m);background:var(--surface);overflow:hidden;box-shadow:var(--sh)}
+.item{display:grid;grid-template-columns:10px 1fr auto;gap:12px;padding:12px 14px 12px 0;border-bottom:2px solid var(--border)}
+.item:last-child{border-bottom:0}
+.item .stripe{border-right:2px solid var(--border);margin:-12px 0}
+.item .t{font-weight:700;line-height:1.35}
+.item .d{font-size:13px;color:var(--muted)}
+.item .acts{display:flex;gap:8px;align-items:flex-start}
+.tag{display:inline-block;font-size:12px;padding:0 8px;border-radius:20px;border:2px solid #000;background:var(--tc,var(--accent));color:#000;font-weight:700;margin-right:6px}
+.empty{padding:28px 16px;text-align:center;color:var(--muted);font-weight:500}
+.empty .btn{margin-top:12px}
+/* lookup */
+.daygroup{margin-bottom:20px}
+.daygroup h3{display:inline-block;font-size:14px;margin:0 0 8px;font-weight:500;background:#000;color:var(--accent);padding:2px 10px;border-radius:var(--radius-s)}
+/* modal */
+dialog{border:var(--bw) solid var(--border);padding:0;border-radius:var(--radius-m);background:var(--surface);color:var(--ink);width:min(640px,calc(100vw - 24px));max-height:calc(100dvh - 40px);box-shadow:8px 8px 0 var(--shadow)}
+dialog::backdrop{background:rgba(20,20,40,.55)}
+.mhead{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:var(--bw) solid var(--border);position:sticky;top:0;background:var(--accent);color:#000;z-index:1}
+.mhead h2{margin:0}
+.mbody{padding:18px 16px}
+.mfoot{display:flex;gap:10px;justify-content:flex-end;padding:12px 16px 16px;border-top:var(--bw) solid var(--border);position:sticky;bottom:0;background:var(--surface)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.full{grid-column:1/-1}
+@media (max-width:520px){.grid2{grid-template-columns:1fr}}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:700}
+label.f > .inp{font-size:15px;font-weight:400}
+.hint{font-size:12px;color:var(--muted);font-weight:500}
+.box{border:var(--bw) dashed var(--border);border-radius:var(--radius-s);padding:12px;background:var(--hover)}
+.box h4{margin:0 0 8px;font-size:15px;font-weight:500}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px}
+.kv dt{font-weight:700}.kv dd{margin:0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--accent);color:#000;border:var(--bw) solid #000;box-shadow:4px 4px 0 #000;padding:10px 16px;border-radius:var(--radius-s);font-size:14px;font-weight:700;z-index:50;max-width:90vw;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+.busy{position:fixed;top:calc(8px + env(safe-area-inset-top,0px));right:12px;font-size:12px;font-weight:700;background:var(--c-swap);color:#000;border:2px solid #000;box-shadow:var(--sh-s);padding:3px 10px;border-radius:20px;display:none;z-index:40}
+.busy.on{display:block}
+table.mini{width:100%;border-collapse:collapse;font-size:14px;border:var(--bw) solid var(--border)}
+table.mini td,table.mini th{padding:7px 9px;border-bottom:2px solid var(--border);text-align:left}
+table.mini th{background:var(--accent);color:#000;font-weight:700;font-size:12px}
+.scroll{overflow-x:auto}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}.btn:hover,.btn:active{transform:none}}
+@media print{
+  body.printing > *:not(dialog){display:none!important}
+  body.printing{background:#fff}
+  body.printing dialog{position:static;box-shadow:none;width:100%;max-height:none}
+  body.printing .mfoot,body.printing .mhead button{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="toprow">
+      <div>
+        <div class="org" id="orgName"></div>
+        <h1>ทะเบียนวันลาและเวร</h1>
+        <div class="mode" id="mode"><i></i><span>เก็บข้อมูลในเครื่องนี้</span></div>
+      </div>
+      <div class="yearpick" aria-label="เลือกปี">
+        <button type="button" data-act="yr" data-d="-1" aria-label="ปีก่อน">‹</button>
+        <strong id="yearLabel"></strong>
+        <button type="button" data-act="yr" data-d="1" aria-label="ปีถัดไป">›</button>
+      </div>
+    </div>
+  </header>
+</div>
+<nav class="tabs"><div class="wrap" id="tabs"></div></nav>
+<main class="wrap" id="view"></main>
+<dialog id="dlg"></dialog>
+<div class="toast" id="toast" role="status"></div>
+<div class="busy" id="busy">กำลังบันทึก…</div>
+
+<script>
+/* ---------- config ---------- */
+const API_URL='https://script.google.com/macros/s/AKfycbzMBsckTXSmeR4r3DWGr0s6WxKhrk3cgZvzBY17H6om8sHZRQ87enb5er-b_3NiQt6U/exec';
+const API_KEY='1234567890'; // ต้องตรงกับ SECRET ใน Code.gs
+const LS='leaveLedger_v1', LS_CONN='leaveLedger_conn', LS_CACHE='leaveLedger_cache';
+const DEFAULT_SETTINGS={
+  org:'เชียงใหม่เนอร์สซิ่งโฮมแคร์ และ แทรงควิลา เอลเดอร์ลี่แคร์',
+  branches:['สาขา 1','สาขา 2','สาขา 3','สาขา 4','สาขา 5 แทรงควิลา'],
+  quota:{sick:30,personal:3,maternity:120},
+  vacationRules:[{min:0,days:0},{min:1,days:6},{min:3,days:8},{min:5,days:10}],
+  shifts:['เช้า','บ่าย','ดึก','12 ชม. กลางวัน','12 ชม. กลางคืน'],
+  warnLevels:['ตักเตือนด้วยวาจา','หนังสือเตือนครั้งที่ 1','หนังสือเตือนครั้งที่ 2','หนังสือเตือนครั้งสุดท้าย']
+};
+const LEAVE={sick:'ลาป่วย',personal:'ลากิจ',vacation:'ลาพักร้อน',maternity:'ลาคลอด',unpaid:'ลาไม่รับค่าจ้าง',other:'ลาอื่นๆ'};
+const LCOLOR={sick:'var(--c-sick)',personal:'var(--c-personal)',vacation:'var(--c-vacation)',maternity:'var(--c-maternity)',unpaid:'var(--c-unpaid)',other:'var(--c-other)'};
+const TABLES=['employees','leaves','sales','swaps','warnings','audit'];
+const TABS=[['overview','ภาพรวมรายปี'],['records','บันทึกรายการ'],['lookup','ใครลาวันไหน'],['employees','พนักงาน'],['audit','ประวัติการแก้ไข'],['settings','ตั้งค่า']];
+const REC=[['leave','การลา','leaves'],['sale','ขายเวร','sales'],['swap','แลกเวร','swaps'],['warning','ใบเตือน','warnings']];
+
+/* ---------- state ---------- */
+const clone=o=>JSON.parse(JSON.stringify(o));
+const lsGet=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+let db={employees:[],leaves:[],sales:[],swaps:[],warnings:[],audit:[],settings:clone(DEFAULT_SETTINGS)};
+let conn=Object.assign({apiUrl:API_URL,apiKey:'',user:''},lsGet(LS_CONN)||{});
+if(!conn.apiUrl)conn.apiUrl=API_URL;
+if(!conn.apiKey)conn.apiKey=API_KEY;
+let gate='';
+let st={view:'overview',rec:'leave',year:new Date().getFullYear(),branch:'',q:'',lookDate:todayISO(),lookMonth:todayISO().slice(0,7),showResigned:false};
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+function todayISO(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+const pd=s=>new Date(String(s).slice(0,10)+'T00:00:00');
+function fd(s){if(!s)return '-';const d=pd(s);if(isNaN(d))return esc(s);return d.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'})}
+function fdt(s){const d=new Date(s);if(isNaN(d))return esc(s);return d.toLocaleString('th-TH',{day:'numeric',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'})}
+const be=y=>+y+543;
+const n=v=>{const x=parseFloat(v);return isNaN(x)?0:x};
+const fmt=v=>{v=Math.round(v*10)/10;return Number.isInteger(v)?String(v):v.toFixed(1)};
+const emp=id=>db.employees.find(e=>e.id===id);
+const ename=id=>{const e=emp(id);return e?(e.name+(e.nick?' ('+e.nick+')':'')):'(ไม่พบพนักงาน)'};
+const inYear=d=>String(d||'').slice(0,4)===String(st.year);
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),3200)}
+function dayDiff(a,b){return Math.round((pd(b)-pd(a))/86400000)}
+function tenure(start,ref){if(!start)return null;const s=pd(start);if(isNaN(s))return null;let y=ref.getFullYear()-s.getFullYear(),m=ref.getMonth()-s.getMonth();if(ref.getDate()<s.getDate())m--;if(m<0){y--;m+=12}if(y<0)return {y:0,m:0};return {y,m}}
+function refDate(){const now=new Date();return st.year===now.getFullYear()?now:new Date(st.year,11,31)}
+const tenureTxt=e=>{const t=tenure(e.startDate,refDate());return t?`${t.y} ปี ${t.m} เดือน`:'ไม่ระบุวันเริ่มงาน'};
+function vacEnt(e){
+  if(String(e.vacOverride??'').trim()!=='')return n(e.vacOverride);
+  const t=tenure(e.startDate,refDate());if(!t)return 0;let d=0;
+  db.settings.vacationRules.slice().sort((a,b)=>a.min-b.min).forEach(r=>{if(t.y>=n(r.min))d=n(r.days)});return d;
+}
+
+/* ---------- data layer ---------- */
+function setMode(m){const el=$('#mode');el.className='mode '+m;el.querySelector('span').textContent=m==='online'?'เชื่อมต่อ Google Sheets':m==='error'?'เชื่อมต่อชีตไม่ได้ (แสดงข้อมูลที่จำไว้ล่าสุด)':'เก็บข้อมูลในเครื่องนี้ (ยังไม่เชื่อมชีต)'}
+function mergeSettings(s){const o=clone(DEFAULT_SETTINGS);Object.assign(o,s||{});o.quota=Object.assign(clone(DEFAULT_SETTINGS.quota),(s||{}).quota||{});return o}
+async function load(){
+  gate='';
+  if(conn.apiUrl&&!conn.apiKey){gate='ใส่รหัสลับครั้งแรกครั้งเดียว ระบบจะจำไว้ในเครื่องนี้';setMode('error');$('#mode span').textContent='รอใส่รหัสลับ';render();return}
+  if(conn.apiUrl){
+    try{
+      const r=await fetch(conn.apiUrl+(conn.apiUrl.includes('?')?'&':'?')+'key='+encodeURIComponent(conn.apiKey));
+      const j=await r.json();if(!j.ok)throw new Error(j.error||'ไม่ทราบสาเหตุ');
+      TABLES.forEach(t=>db[t]=j.data[t]||[]);
+      const s=(j.data.settings||[]).find(x=>x.id==='main');
+      db.settings=mergeSettings(s&&s.json?JSON.parse(s.json):null);
+      lsSet(LS_CACHE,db);setMode('online');
+    }catch(e){
+      if(/รหัสลับ/.test(e.message)){gate='รหัสลับไม่ถูกต้อง ลองใส่ใหม่อีกครั้ง';setMode('error');$('#mode span').textContent='รหัสลับไม่ถูกต้อง';render();return}
+      setMode('error');toast('เชื่อมต่อ Google Sheets ไม่ได้: '+e.message);
+      const c=lsGet(LS_CACHE);if(c){Object.assign(db,c);db.settings=mergeSettings(c.settings)}
+    }
+  }else{
+    const d=lsGet(LS);if(d){TABLES.forEach(t=>db[t]=d[t]||[]);db.settings=mergeSettings(d.settings)}
+    setMode('local');
+  }
+  render();
+}
+function applyLocal(op){
+  if(op.table==='settings'){db.settings=mergeSettings(JSON.parse(op.row.json));return}
+  const arr=db[op.table];const id=op.row?op.row.id:op.id;const i=arr.findIndex(x=>x.id===id);
+  if(op.action==='upsert'){if(i>=0)arr[i]=op.row;else arr.push(op.row)}else if(i>=0)arr.splice(i,1);
+}
+const auditOp=text=>({action:'upsert',table:'audit',row:{id:uid(),at:new Date().toISOString(),by:conn.user||'ผู้ดูแล',text}});
+async function commit(ops){
+  ops.forEach(applyLocal);
+  if(conn.apiUrl){
+    $('#busy').classList.add('on');
+    try{
+      const r=await fetch(conn.apiUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:conn.apiKey,action:'bulk',ops})});
+      const j=await r.json();if(!j.ok)throw new Error(j.error||'ไม่ทราบสาเหตุ');
+      lsSet(LS_CACHE,db);
+    }catch(e){toast('บันทึกขึ้นชีตไม่สำเร็จ: '+e.message);await load();return false}
+    finally{$('#busy').classList.remove('on')}
+  }else lsSet(LS,db);
+  render();return true;
+}
+
+/* ---------- summaries ---------- */
+function summary(e){
+  const L=db.leaves.filter(l=>l.empId===e.id&&inYear(l.start));
+  const s={};Object.keys(LEAVE).forEach(k=>s[k]=L.filter(l=>l.type===k).reduce((a,l)=>a+n(l.days),0));
+  s.vacEnt=vacEnt(e);
+  s.sold=db.sales.filter(x=>x.sellerId===e.id&&inYear(x.date)).length;
+  s.bought=db.sales.filter(x=>x.buyerId===e.id&&inYear(x.date)).length;
+  s.swaps=db.swaps.filter(x=>(x.aId===e.id||x.bId===e.id)&&(inYear(x.aDate)||inYear(x.bDate))).length;
+  s.warns=db.warnings.filter(x=>x.empId===e.id&&inYear(x.date)).length;
+  return s;
+}
+function tiles(used,total){
+  let h='<div class="tiles" aria-label="ใช้ไป '+fmt(used)+' จาก '+total+' วัน">';
+  for(let i=0;i<total;i++)h+=`<span class="tile ${used>=i+1?'full':used>i?'half':''}"></span>`;
+  const over=Math.ceil(used-total);for(let i=0;i<over;i++)h+='<span class="tile over" title="เกินสิทธิ์"></span>';
+  if(!total&&!used)return '<span class="emeta">ยังไม่มีสิทธิ์</span>';
+  return h+`<em>${fmt(used)}/${total} · เหลือ ${fmt(Math.max(total-used,0))}</em></div>`;
+}
+const frac=(u,q)=>`<span class="num frac ${u>q?'over':''}">${fmt(u)}<small>/${q}</small></span>`;
+
+/* ---------- render ---------- */
+function render(){
+  $('#orgName').textContent=db.settings.org||'';
+  $('#yearLabel').textContent='ปี '+be(st.year);
+  $('#tabs').innerHTML=TABS.map(([k,l])=>`<button type="button" data-act="tab" data-k="${k}" aria-current="${st.view===k}">${l}</button>`).join('');
+  if(gate){$('#view').innerHTML=vGate();return}
+  const v={overview:vOverview,records:vRecords,lookup:vLookup,employees:vEmployees,audit:vAudit,settings:vSettings}[st.view];
+  $('#view').innerHTML=v();
+}
+function branchOpts(sel,all='ทุกสาขา'){return `<option value="">${all}</option>`+db.settings.branches.map(b=>`<option ${b===sel?'selected':''}>${esc(b)}</option>`).join('')}
+function filteredEmps(){
+  const q=st.q.trim().toLowerCase();
+  return db.employees.filter(e=>(st.showResigned||e.status!=='resigned')&&(!st.branch||e.branch===st.branch)&&(!q||[e.name,e.nick,e.code,e.position].join(' ').toLowerCase().includes(q)))
+    .sort((a,b)=>(a.branch||'').localeCompare(b.branch||'','th')||a.name.localeCompare(b.name,'th'));
+}
+function emptyStart(){
+  return `<div class="panel empty"><p>ยังไม่มีพนักงานในระบบ เริ่มจากเพิ่มรายชื่อพนักงานก่อน แล้วค่อยบันทึกการลาและเวร</p>
+  <button class="btn primary" data-act="form" data-k="employee">เพิ่มพนักงาน</button>
+  ${conn.apiUrl?'':' <button class="btn" data-act="sample">ลองใส่ข้อมูลตัวอย่าง</button>'}</div>`;
+}
+function vOverview(){
+  if(!db.employees.length)return emptyStart();
+  const Q=db.settings.quota;const L=db.leaves.filter(l=>inYear(l.start));
+  const tot=k=>L.filter(l=>l.type===k).reduce((a,l)=>a+n(l.days),0);
+  const emps=filteredEmps();
+  return `<h2>สรุปการลาและเวร ปี ${be(st.year)}</h2>
+  <p class="sub">นับตามวันเริ่มลา สิทธิ์ลาพักร้อนคิดจากอายุงาน ณ ${st.year===new Date().getFullYear()?'วันนี้':'สิ้นปี'} แตะชื่อเพื่อดูประวัติรายคน</p>
+  <div class="totals">
+    ${['sick','personal','vacation','maternity'].map(k=>`<div><b class="num">${fmt(tot(k))}</b><span><i class="swatch" style="background:${LCOLOR[k]}"></i>${LEAVE[k]} (วัน)</span></div>`).join('')}
+    <div><b class="num">${db.sales.filter(x=>inYear(x.date)).length}</b><span><i class="swatch" style="background:var(--c-sale)"></i>ขายเวร (ครั้ง)</span></div>
+    <div><b class="num">${db.swaps.filter(x=>inYear(x.aDate)||inYear(x.bDate)).length}</b><span><i class="swatch" style="background:var(--c-swap)"></i>แลกเวร (ครั้ง)</span></div>
+    <div><b class="num">${db.warnings.filter(x=>inYear(x.date)).length}</b><span><i class="swatch" style="background:var(--c-warn)"></i>ใบเตือน</span></div>
+  </div>
+  <div class="bar">
+    <input class="inp" type="search" placeholder="ค้นหาชื่อ ชื่อเล่น รหัส ตำแหน่ง" value="${esc(st.q)}" data-act="q">
+    <select class="inp" data-act="branch">${branchOpts(st.branch)}</select>
+    <button class="btn" data-act="csvSummary">ส่งออก Excel (CSV)</button>
+  </div>
+  <div class="ledger">
+    <div class="lhead"><span>พนักงาน</span><span>ลาป่วย</span><span>ลากิจ</span><span>ลาพักร้อน</span><span>ลาคลอด</span><span>ขาย / รับ / แลก</span><span>เตือน</span></div>
+    ${emps.map(e=>{const s=summary(e);return `<button type="button" class="lrow" data-act="detail" data-id="${e.id}">
+      <span class="c-name"><span class="ename">${esc(e.name)}${e.nick?' ('+esc(e.nick)+')':''}</span><span class="emeta">${esc(e.branch||'-')} · ${esc(e.position||'-')} · อายุงาน ${tenureTxt(e)}</span></span>
+      <span><span class="lbl-m">ลาป่วย</span>${frac(s.sick,Q.sick)}</span>
+      <span><span class="lbl-m">ลากิจ</span>${frac(s.personal,Q.personal)}</span>
+      <span class="c-vac"><span class="lbl-m">ลาพักร้อน</span>${tiles(s.vacation,s.vacEnt)}</span>
+      <span><span class="lbl-m">ลาคลอด</span>${s.maternity?frac(s.maternity,Q.maternity):'<span class="emeta">-</span>'}</span>
+      <span class="num"><span class="lbl-m">ขาย / รับ / แลก</span>${s.sold} / ${s.bought} / ${s.swaps}</span>
+      <span class="num ${s.warns?'over':''}"><span class="lbl-m">ใบเตือน</span>${s.warns}</span>
+    </button>`}).join('')||'<div class="empty">ไม่พบพนักงานตามเงื่อนไขที่ค้นหา</div>'}
+  </div>`;
+}
+/* --- record items --- */
+function itemLeave(l){return `<div class="item"><span class="stripe" style="background:${LCOLOR[l.type]}"></span><div>
+  <div class="t">${esc(ename(l.empId))}</div>
+  <div class="d"><span class="tag" style="--tc:${LCOLOR[l.type]}">${LEAVE[l.type]||esc(l.type)}</span>${fd(l.start)}${l.end&&l.end!==l.start?' – '+fd(l.end):''} · ${fmt(n(l.days))} วัน${l.half?' ('+(l.half==='am'?'ครึ่งเช้า':'ครึ่งบ่าย')+')':''}</div>
+  <div class="d">${l.reason?esc(l.reason)+' · ':''}${l.docNo?'ใบลาเลขที่ '+esc(l.docNo)+' · ':''}${l.approver?'อนุมัติโดย '+esc(l.approver):'ยังไม่ระบุผู้อนุมัติ'}</div></div>
+  <div class="acts"><button class="btn small" data-act="form" data-k="leave" data-id="${l.id}">แก้ไข</button></div></div>`}
+function itemSale(x){return `<div class="item"><span class="stripe" style="background:var(--c-sale)"></span><div>
+  <div class="t">${esc(ename(x.sellerId))} ขายเวรให้ ${esc(ename(x.buyerId))}</div>
+  <div class="d"><span class="tag" style="--tc:var(--c-sale)">ขายเวร</span>เวร${esc(x.shift)} ${fd(x.date)}${n(x.price)?' · ราคา '+n(x.price).toLocaleString('th-TH')+' บาท':''}</div>
+  <div class="d">${x.docNo?'เอกสาร '+esc(x.docNo)+' · ':''}${x.approver?'อนุมัติโดย '+esc(x.approver):'ยังไม่ระบุผู้อนุมัติ'}${x.note?' · '+esc(x.note):''}</div></div>
+  <div class="acts"><button class="btn small" data-act="form" data-k="sale" data-id="${x.id}">แก้ไข</button></div></div>`}
+function itemSwap(x){return `<div class="item"><span class="stripe" style="background:var(--c-swap)"></span><div>
+  <div class="t">${esc(ename(x.aId))} ⇄ ${esc(ename(x.bId))}</div>
+  <div class="d"><span class="tag" style="--tc:var(--c-swap)">แลกเวร</span>${esc(emp(x.aId)?.nick||ename(x.aId))} ยกเวร${esc(x.aShift)} ${fd(x.aDate)} ให้ · ${esc(emp(x.bId)?.nick||ename(x.bId))} ยกเวร${esc(x.bShift)} ${fd(x.bDate)} ให้</div>
+  <div class="d">${x.docNo?'เอกสาร '+esc(x.docNo)+' · ':''}${x.approver?'อนุมัติโดย '+esc(x.approver):'ยังไม่ระบุผู้อนุมัติ'}${x.note?' · '+esc(x.note):''}</div></div>
+  <div class="acts"><button class="btn small" data-act="form" data-k="swap" data-id="${x.id}">แก้ไข</button></div></div>`}
+function itemWarn(x){return `<div class="item"><span class="stripe" style="background:var(--c-warn)"></span><div>
+  <div class="t">${esc(ename(x.empId))}</div>
+  <div class="d"><span class="tag" style="--tc:var(--c-warn)">${esc(x.level)}</span>${fd(x.date)} · ${esc(x.topic)}</div>
+  <div class="d">${x.docNo?'เลขที่ '+esc(x.docNo)+' · ':''}${esc(x.detail||'')}</div></div>
+  <div class="acts"><button class="btn small" data-act="form" data-k="warning" data-id="${x.id}">แก้ไข</button></div></div>`}
+const ITEM={leave:itemLeave,sale:itemSale,swap:itemSwap,warning:itemWarn};
+function recRows(k){
+  const q=st.q.trim().toLowerCase();
+  const match=ids=>!q&&!st.branch||ids.some(id=>{const e=emp(id);return e&&(!st.branch||e.branch===st.branch)&&(!q||[e.name,e.nick,e.code].join(' ').toLowerCase().includes(q))});
+  if(k==='leave')return db.leaves.filter(l=>inYear(l.start)&&match([l.empId])).sort((a,b)=>b.start.localeCompare(a.start));
+  if(k==='sale')return db.sales.filter(x=>inYear(x.date)&&match([x.sellerId,x.buyerId])).sort((a,b)=>b.date.localeCompare(a.date));
+  if(k==='swap')return db.swaps.filter(x=>(inYear(x.aDate)||inYear(x.bDate))&&match([x.aId,x.bId])).sort((a,b)=>b.aDate.localeCompare(a.aDate));
+  return db.warnings.filter(x=>inYear(x.date)&&match([x.empId])).sort((a,b)=>b.date.localeCompare(a.date));
+}
+function vRecords(){
+  if(!db.employees.length)return emptyStart();
+  const rows=recRows(st.rec);const label=REC.find(r=>r[0]===st.rec)[1];
+  return `<div class="bar"><div class="seg" role="group">${REC.map(([k,l])=>`<button type="button" data-act="rec" data-k="${k}" aria-pressed="${st.rec===k}">${l}</button>`).join('')}</div>
+    <button class="btn primary" data-act="form" data-k="${st.rec}">เพิ่ม${label}</button></div>
+  <div class="bar"><input class="inp" type="search" placeholder="กรองตามชื่อพนักงาน" value="${esc(st.q)}" data-act="q">
+    <select class="inp" data-act="branch">${branchOpts(st.branch)}</select>
+    <button class="btn" data-act="csvRec">ส่งออก CSV</button></div>
+  <p class="sub">${label}ปี ${be(st.year)} ทั้งหมด ${rows.length} รายการ</p>
+  <div class="list">${rows.map(ITEM[st.rec]).join('')||`<div class="empty">ยังไม่มี${label}ในปีนี้</div>`}</div>`;
+}
+function eventsOn(d){
+  const out=[];
+  db.leaves.forEach(l=>{if(l.start<=d&&(l.end||l.start)>=d)out.push(itemLeave(l))});
+  db.sales.forEach(x=>{if(x.date===d)out.push(itemSale(x))});
+  db.swaps.forEach(x=>{if(x.aDate===d||x.bDate===d)out.push(itemSwap(x))});
+  return out;
+}
+function vLookup(){
+  const d=st.lookDate,ev=eventsOn(d);
+  const [y,m]=st.lookMonth.split('-').map(Number);const days=new Date(y,m,0).getDate();let month='';
+  for(let i=1;i<=days;i++){const ds=`${y}-${String(m).padStart(2,'0')}-${String(i).padStart(2,'0')}`;const e=eventsOn(ds);if(e.length)month+=`<div class="daygroup"><h3>${pd(ds).toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long'})}</h3><div class="list">${e.join('')}</div></div>`}
+  return `<h2>ใครลา หรือเปลี่ยนเวร วันไหน</h2><p class="sub">ใช้ตอบเวลามีคนถามว่าวันนั้นใครไม่อยู่ หรือใครขึ้นเวรแทนใคร</p>
+  <div class="bar"><label class="f" style="flex:1 1 200px">เลือกวัน<input class="inp" type="date" value="${d}" data-act="lookDate"></label></div>
+  <div class="list" style="margin-bottom:24px">${ev.join('')||'<div class="empty">ไม่มีคนลาหรือเปลี่ยนเวรในวันนี้</div>'}</div>
+  <h2>ทั้งเดือน</h2>
+  <div class="bar"><label class="f" style="flex:1 1 200px">เลือกเดือน<input class="inp" type="month" value="${st.lookMonth}" data-act="lookMonth"></label></div>
+  ${month||'<div class="panel empty">เดือนนี้ยังไม่มีรายการ</div>'}`;
+}
+function vEmployees(){
+  const emps=filteredEmps();
+  return `<div class="bar"><button class="btn primary" data-act="form" data-k="employee">เพิ่มพนักงาน</button>
+  <input class="inp" type="search" placeholder="ค้นหา" value="${esc(st.q)}" data-act="q"><select class="inp" data-act="branch">${branchOpts(st.branch)}</select>
+  <label style="display:flex;gap:6px;align-items:center;font-size:14px"><input type="checkbox" data-act="resigned" ${st.showResigned?'checked':''}> แสดงคนที่ลาออกแล้ว</label></div>
+  <div class="list">${emps.map(e=>`<div class="item"><span class="stripe" style="background:${e.status==='resigned'?'var(--line)':'var(--accent)'}"></span><div>
+    <div class="t">${esc(e.name)}${e.nick?' ('+esc(e.nick)+')':''}${e.status==='resigned'?' <span class="tag" style="--tc:var(--c-unpaid)">ลาออกแล้ว</span>':''}</div>
+    <div class="d">${e.code?'รหัส '+esc(e.code)+' · ':''}${esc(e.branch||'-')} · ${esc(e.position||'-')}</div>
+    <div class="d">เริ่มงาน ${fd(e.startDate)} · อายุงาน ${tenureTxt(e)} · สิทธิ์ลาพักร้อนปีนี้ ${vacEnt(e)} วัน${String(e.vacOverride??'').trim()!==''?' (กำหนดเอง)':''}</div></div>
+    <div class="acts"><button class="btn small" data-act="detail" data-id="${e.id}">ประวัติ</button><button class="btn small" data-act="form" data-k="employee" data-id="${e.id}">แก้ไข</button></div></div>`).join('')||'<div class="empty">ยังไม่มีพนักงาน</div>'}</div>`;
+}
+function vAudit(){
+  const a=db.audit.slice().sort((x,y)=>String(y.at).localeCompare(String(x.at))).slice(0,300);
+  return `<h2>ประวัติการเพิ่ม แก้ไข และลบ</h2><p class="sub">ทุกการเปลี่ยนแปลงถูกเก็บไว้ตรวจสอบย้อนหลัง แสดง 300 รายการล่าสุด</p>
+  <div class="panel scroll"><table class="mini"><thead><tr><th>เวลา</th><th>ผู้บันทึก</th><th>รายการ</th></tr></thead><tbody>
+  ${a.map(x=>`<tr><td style="white-space:nowrap">${fdt(x.at)}</td><td>${esc(x.by)}</td><td>${esc(x.text)}</td></tr>`).join('')||'<tr><td colspan="3" class="empty">ยังไม่มีประวัติ</td></tr>'}</tbody></table></div>`;
+}
+function vGate(){
+  return `<form class="panel" data-form="key" style="max-width:460px;margin:20px auto"><h2>เข้าสู่ระบบ</h2><p class="sub">${esc(gate)}</p>
+  <div class="grid2"><label class="f full">รหัสลับ (SECRET ใน Code.gs)<input class="inp" name="apiKey" type="password" required autocomplete="current-password"></label>
+  <label class="f full">ชื่อผู้บันทึก (แสดงในประวัติการแก้ไข)<input class="inp" name="user" value="${esc(conn.user)}" placeholder="เช่น คุณต้น"></label></div>
+  <div class="bar" style="margin:16px 0 0"><button class="btn primary">เชื่อมต่อ</button></div></form>`;
+}
+function vSettings(){
+  const s=db.settings;
+  return `<form class="panel" data-form="settings"><h2>สิทธิ์การลาและข้อมูลองค์กร</h2><p class="sub">ปรับให้ตรงกับระเบียบบริษัท ค่าเริ่มต้นอิงขั้นต่ำตามกฎหมายแรงงาน</p>
+  <div class="grid2">
+    <label class="f full">ชื่อองค์กร<input class="inp" name="org" value="${esc(s.org)}"></label>
+    <label class="f">ลาป่วยได้ (วัน/ปี)<input class="inp" type="number" step="0.5" name="sick" value="${s.quota.sick}"></label>
+    <label class="f">ลากิจได้ (วัน/ปี)<input class="inp" type="number" step="0.5" name="personal" value="${s.quota.personal}"></label>
+    <label class="f">ลาคลอดได้ (วัน)<input class="inp" type="number" name="maternity" value="${s.quota.maternity}"></label>
+    <label class="f full">สิทธิ์ลาพักร้อนตามอายุงาน<textarea class="inp" name="vac" rows="4">${s.vacationRules.map(r=>r.min+'='+r.days).join('\n')}</textarea><span class="hint">บรรทัดละเกณฑ์ รูปแบบ อายุงานขั้นต่ำ(ปี)=จำนวนวัน เช่น 1=6 หมายถึงทำงานครบ 1 ปีได้ 6 วัน</span></label>
+    <label class="f">สาขา (บรรทัดละสาขา)<textarea class="inp" name="branches" rows="5">${esc(s.branches.join('\n'))}</textarea></label>
+    <label class="f">ชื่อเวร (บรรทัดละเวร)<textarea class="inp" name="shifts" rows="5">${esc(s.shifts.join('\n'))}</textarea></label>
+    <label class="f full">ระดับใบเตือน (บรรทัดละระดับ)<textarea class="inp" name="warnLevels" rows="4">${esc(s.warnLevels.join('\n'))}</textarea></label>
+  </div><div class="bar" style="margin:14px 0 0"><button class="btn primary">บันทึกการตั้งค่า</button></div></form>
+
+  <form class="panel" data-form="conn"><h2>เชื่อมต่อ Google Sheets</h2>
+  <p class="sub">ตอนนี้${conn.apiUrl?'เชื่อมกับชีตอยู่':'ข้อมูลเก็บในเบราว์เซอร์เครื่องนี้เท่านั้น ถ้าล้างเบราว์เซอร์ข้อมูลจะหาย'} วาง URL ของ Apps Script ที่ Deploy แล้ว เพื่อเก็บข้อมูลถาวรใน Google Sheets</p>
+  <div class="grid2">
+    <label class="f full">Web App URL<input class="inp" name="apiUrl" value="${esc(conn.apiUrl)}" placeholder="https://script.google.com/macros/s/.../exec"><span class="hint">ฝังลิงก์ไว้ในแอปแล้ว ไม่ต้องแก้</span></label>
+    <label class="f">รหัสลับ (ตรงกับ SECRET ใน Code.gs)<input class="inp" name="apiKey" type="password" value="${esc(conn.apiKey)}"></label>
+    <label class="f">ชื่อผู้บันทึก (แสดงในประวัติ)<input class="inp" name="user" value="${esc(conn.user)}" placeholder="เช่น คุณต้น"></label>
+  </div><div class="bar" style="margin:14px 0 0"><button class="btn primary">บันทึกและเชื่อมต่อ</button>
+  ${conn.apiUrl&&lsGet(LS)?'<button type="button" class="btn" data-act="pushLocal">ย้ายข้อมูลจากเครื่องนี้ขึ้นชีต</button>':''}</div></form>
+
+  <div class="panel"><h2>สำรองและส่งออก</h2><p class="sub">ไฟล์ CSV เปิดด้วย Excel ได้ภาษาไทยไม่เพี้ยน</p>
+  <div class="bar"><button class="btn" data-act="csvAll">ส่งออกทุกรายการปี ${be(st.year)} (CSV)</button>
+  <button class="btn" data-act="backup">สำรองข้อมูลทั้งหมด (JSON)</button>
+  <label class="btn" style="display:inline-flex;align-items:center">นำเข้าไฟล์สำรอง<input type="file" accept=".json" data-act="restore" hidden></label></div></div>`;
+}
+
+/* ---------- forms ---------- */
+function empOpts(sel){return '<option value="">เลือกพนักงาน</option>'+db.employees.filter(e=>e.status!=='resigned'||e.id===sel).sort((a,b)=>a.name.localeCompare(b.name,'th')).map(e=>`<option value="${e.id}" ${e.id===sel?'selected':''}>${esc(e.name)}${e.nick?' ('+esc(e.nick)+')':''} · ${esc(e.branch||'')}</option>`).join('')}
+const opts=(arr,sel)=>arr.map(v=>`<option ${v===sel?'selected':''}>${esc(v)}</option>`).join('');
+const fld=(label,html,cls='')=>`<label class="f ${cls}">${label}${html}</label>`;
+const common=r=>fld('เลขที่เอกสาร / ใบลา',`<input class="inp" name="docNo" value="${esc(r.docNo)}" placeholder="ตรงกับใบกระดาษ">`)+fld('ผู้อนุมัติ',`<input class="inp" name="approver" value="${esc(r.approver??(conn.user||''))}">`);
+function openForm(k,id){
+  const tbl={leave:'leaves',sale:'sales',swap:'swaps',warning:'warnings',employee:'employees'}[k];
+  const r=id?clone(db[tbl].find(x=>x.id===id)||{}):{};const t=todayISO();let body='',title='';
+  if(k==='employee'){title=id?'แก้ไขข้อมูลพนักงาน':'เพิ่มพนักงาน';body=
+    fld('ชื่อ-นามสกุล *',`<input class="inp" name="name" required value="${esc(r.name)}">`,'full')+
+    fld('ชื่อเล่น',`<input class="inp" name="nick" value="${esc(r.nick)}">`)+fld('รหัสพนักงาน',`<input class="inp" name="code" value="${esc(r.code)}">`)+
+    fld('สาขา',`<select class="inp" name="branch">${branchOpts(r.branch,'ไม่ระบุ')}</select>`)+fld('ตำแหน่ง',`<input class="inp" name="position" value="${esc(r.position)}" placeholder="เช่น ผู้ช่วยพยาบาล">`)+
+    fld('วันเริ่มงาน',`<input class="inp" type="date" name="startDate" value="${esc(r.startDate)}">`)+
+    fld('สิทธิ์ลาพักร้อนต่อปี (ถ้าต่างจากเกณฑ์)',`<input class="inp" type="number" step="0.5" name="vacOverride" value="${esc(r.vacOverride)}" placeholder="เว้นว่าง = คิดตามอายุงาน">`)+
+    fld('สถานะ',`<select class="inp" name="status"><option value="active">ทำงานอยู่</option><option value="resigned" ${r.status==='resigned'?'selected':''}>ลาออกแล้ว</option></select>`)+
+    fld('หมายเหตุ',`<input class="inp" name="note" value="${esc(r.note)}">`);}
+  if(k==='leave'){title=id?'แก้ไขการลา':'บันทึกการลา';body=
+    fld('พนักงาน *',`<select class="inp" name="empId" required>${empOpts(r.empId)}</select>`,'full')+
+    fld('ประเภทการลา',`<select class="inp" name="type">${Object.entries(LEAVE).map(([v,l])=>`<option value="${v}" ${v===r.type?'selected':''}>${l}</option>`).join('')}</select>`)+
+    fld('ลาเต็มวันหรือครึ่งวัน',`<select class="inp" name="half" data-calc><option value="">เต็มวัน</option><option value="am" ${r.half==='am'?'selected':''}>ครึ่งวันเช้า</option><option value="pm" ${r.half==='pm'?'selected':''}>ครึ่งวันบ่าย</option></select>`)+
+    fld('ตั้งแต่วันที่ *',`<input class="inp" type="date" name="start" required value="${esc(r.start||t)}" data-calc>`)+
+    fld('ถึงวันที่',`<input class="inp" type="date" name="end" value="${esc(r.end||r.start||t)}" data-calc>`)+
+    fld('จำนวนวันที่นับ *',`<input class="inp" type="number" step="0.5" min="0.5" name="days" required value="${esc(r.days||1)}" ${id?'data-manual="1"':''}><span class="hint">คำนวณให้อัตโนมัติ แก้เองได้ถ้ามีวันหยุดคั่น</span>`)+
+    fld('เหตุผล',`<input class="inp" name="reason" value="${esc(r.reason)}">`)+common(r)+
+    fld('หมายเหตุ',`<input class="inp" name="note" value="${esc(r.note)}">`,'full')+`<div class="full hint" id="quotaHint"></div>`;}
+  if(k==='sale'){title=id?'แก้ไขการขายเวร':'บันทึกการขายเวร';body=
+    fld('เจ้าของเวรเดิม (ผู้ขาย) *',`<select class="inp" name="sellerId" required>${empOpts(r.sellerId)}</select>`,'full')+
+    fld('ผู้ขึ้นเวรแทน (ผู้รับซื้อ) *',`<select class="inp" name="buyerId" required>${empOpts(r.buyerId)}</select>`,'full')+
+    fld('วันที่ของเวร *',`<input class="inp" type="date" name="date" required value="${esc(r.date||t)}">`)+fld('เวร',`<select class="inp" name="shift">${opts(db.settings.shifts,r.shift)}</select>`)+
+    fld('ราคา (บาท) ถ้ามี',`<input class="inp" type="number" name="price" value="${esc(r.price)}">`)+common(r)+fld('หมายเหตุ',`<input class="inp" name="note" value="${esc(r.note)}">`);}
+  if(k==='swap'){title=id?'แก้ไขการแลกเวร':'บันทึกการแลกเวร';body=
+    `<div class="box full"><h4>คนที่ 1</h4><div class="grid2">${fld('พนักงาน *',`<select class="inp" name="aId" required>${empOpts(r.aId)}</select>`,'full')+fld('วันที่ของเวรเดิม *',`<input class="inp" type="date" name="aDate" required value="${esc(r.aDate||t)}">`)+fld('เวร',`<select class="inp" name="aShift">${opts(db.settings.shifts,r.aShift)}</select>`)}</div></div>`+
+    `<div class="box full"><h4>คนที่ 2 (ขึ้นเวรของคนที่ 1 แทน และยกเวรตัวเองให้)</h4><div class="grid2">${fld('พนักงาน *',`<select class="inp" name="bId" required>${empOpts(r.bId)}</select>`,'full')+fld('วันที่ของเวรเดิม *',`<input class="inp" type="date" name="bDate" required value="${esc(r.bDate||t)}">`)+fld('เวร',`<select class="inp" name="bShift">${opts(db.settings.shifts,r.bShift)}</select>`)}</div></div>`+
+    common(r)+fld('หมายเหตุ',`<input class="inp" name="note" value="${esc(r.note)}">`,'full');}
+  if(k==='warning'){title=id?'แก้ไขใบเตือน':'บันทึกใบเตือน';body=
+    fld('พนักงาน *',`<select class="inp" name="empId" required>${empOpts(r.empId)}</select>`,'full')+
+    fld('วันที่ *',`<input class="inp" type="date" name="date" required value="${esc(r.date||t)}">`)+fld('ระดับ',`<select class="inp" name="level">${opts(db.settings.warnLevels,r.level)}</select>`)+
+    fld('เรื่อง *',`<input class="inp" name="topic" required value="${esc(r.topic)}" placeholder="เช่น มาสาย ขาดงาน">`,'full')+
+    fld('รายละเอียด',`<textarea class="inp" name="detail" rows="3">${esc(r.detail)}</textarea>`,'full')+fld('เลขที่เอกสาร',`<input class="inp" name="docNo" value="${esc(r.docNo)}">`);}
+  const d=$('#dlg');
+  d.innerHTML=`<form data-form="${k}" data-id="${id||''}"><div class="mhead"><h2>${title}</h2><button type="button" class="btn small" data-act="close">ปิด</button></div>
+  <div class="mbody"><div class="grid2">${body}</div></div>
+  <div class="mfoot">${id?'<button type="button" class="btn danger" data-act="del" data-k="'+k+'" data-id="'+id+'" style="margin-right:auto">ลบ</button>':''}<button type="button" class="btn" data-act="close">ยกเลิก</button><button class="btn primary">${id?'บันทึกการแก้ไข':'บันทึก'}</button></div></form>`;
+  d.showModal();if(k==='leave')leaveHint();
+}
+function calcDays(){
+  const f=$('#dlg form');if(!f||f.dataset.form!=='leave')return;
+  const s=f.elements.namedItem('start').value,e=f.elements.namedItem('end').value||s;
+  if(f.elements.namedItem('half').value){f.elements.namedItem('end').value=s;if(!f.elements.namedItem('days').dataset.manual)f.elements.namedItem('days').value=0.5}
+  else if(s&&e){if(e<s)f.elements.namedItem('end').value=s;if(!f.elements.namedItem('days').dataset.manual)f.elements.namedItem('days').value=Math.max(dayDiff(s,f.elements.namedItem('end').value)+1,1)}
+  leaveHint();
+}
+function leaveHint(){
+  const f=$('#dlg form'),h=$('#quotaHint');if(!f||!h)return;const e=emp(f.elements.namedItem('empId').value);if(!e){h.textContent='';return}
+  const yy=st.year;st.year=+String(f.elements.namedItem('start').value||todayISO()).slice(0,4);
+  const s=summary(e),id=f.dataset.id,t=f.elements.namedItem('type').value;
+  const prev=id?n((db.leaves.find(l=>l.id===id)||{}).days):0;const after=(s[t]||0)-(id&&db.leaves.find(l=>l.id===id)?.type===t?prev:0)+n(f.elements.namedItem('days').value);
+  const q=t==='vacation'?s.vacEnt:db.settings.quota[t];st.year=yy;
+  h.innerHTML=q!==undefined?`${esc(e.name)} ใช้${LEAVE[t]}ปีนี้ รวมรายการนี้แล้ว ${fmt(after)} จาก ${q} วัน${after>q?' <b class="over">เกินสิทธิ์</b>':''}`:'';
+}
+function readForm(f){const o={};new FormData(f).forEach((v,k)=>o[k]=String(v).trim());return o}
+async function submit(f){
+  const k=f.dataset.form;
+  if(k==='settings'){const o=readForm(f);const s=clone(db.settings);s.org=o.org;s.quota={sick:n(o.sick),personal:n(o.personal),maternity:n(o.maternity)};
+    s.vacationRules=o.vac.split('\n').map(l=>l.split('=')).filter(p=>p.length===2&&p[0].trim()!=='').map(p=>({min:n(p[0]),days:n(p[1])}));
+    ['branches','shifts','warnLevels'].forEach(x=>s[x]=o[x].split('\n').map(v=>v.trim()).filter(Boolean));
+    if(await commit([{action:'upsert',table:'settings',row:{id:'main',json:JSON.stringify(s)}},auditOp('แก้ไขการตั้งค่าสิทธิ์การลา')]))toast('บันทึกการตั้งค่าแล้ว');return}
+  if(k==='key'){const o=readForm(f);conn.apiKey=o.apiKey;conn.user=o.user;lsSet(LS_CONN,conn);await load();if($('#mode').classList.contains('online'))toast('เชื่อมต่อ Google Sheets แล้ว');return}
+  if(k==='conn'){const o=readForm(f);conn={apiUrl:o.apiUrl||API_URL,apiKey:o.apiKey,user:o.user};lsSet(LS_CONN,conn);toast(conn.apiUrl?'กำลังเชื่อมต่อ…':'ใช้การเก็บข้อมูลในเครื่องนี้');await load();if(conn.apiUrl&&$('#mode').classList.contains('online'))toast('เชื่อมต่อ Google Sheets แล้ว');return}
+  const tbl={leave:'leaves',sale:'sales',swap:'swaps',warning:'warnings',employee:'employees'}[k];
+  const id=f.dataset.id;const old=id?db[tbl].find(x=>x.id===id):null;
+  const o=Object.assign({},old||{},readForm(f),{id:id||uid(),updatedAt:new Date().toISOString()});if(!old)o.createdAt=o.updatedAt;
+  let desc='';
+  if(k==='employee'){desc=`พนักงาน ${o.name}`}
+  if(k==='leave'){
+    if(o.end&&o.end<o.start)return toast('วันสิ้นสุดต้องไม่ก่อนวันเริ่ม');if(n(o.days)<=0)return toast('จำนวนวันต้องมากกว่า 0');o.end=o.end||o.start;
+    const ov=db.leaves.find(l=>l.id!==o.id&&l.empId===o.empId&&l.start<=o.end&&(l.end||l.start)>=o.start);
+    if(ov&&!confirm(`${ename(o.empId)} มีการลาซ้อนช่วงนี้อยู่แล้ว (${LEAVE[ov.type]} ${fd(ov.start)}) ต้องการบันทึกต่อหรือไม่`))return;
+    if($('#quotaHint .over')&&!confirm('การลานี้เกินสิทธิ์ที่กำหนด ต้องการบันทึกต่อหรือไม่'))return;
+    desc=`${LEAVE[o.type]} ${ename(o.empId)} ${fd(o.start)}${o.end!==o.start?'–'+fd(o.end):''} ${fmt(n(o.days))} วัน`}
+  if(k==='sale'){if(o.sellerId===o.buyerId)return toast('ผู้ขายและผู้รับต้องเป็นคนละคน');desc=`ขายเวร${o.shift} ${fd(o.date)} ${ename(o.sellerId)} → ${ename(o.buyerId)}`}
+  if(k==='swap'){if(o.aId===o.bId)return toast('ต้องเลือกพนักงาน 2 คนที่ต่างกัน');desc=`แลกเวร ${ename(o.aId)} (${o.aShift} ${fd(o.aDate)}) ⇄ ${ename(o.bId)} (${o.bShift} ${fd(o.bDate)})`}
+  if(k==='warning'){desc=`ใบเตือน ${o.level} ${ename(o.empId)} ${fd(o.date)} เรื่อง ${o.topic}`}
+  $('#dlg').close();
+  if(await commit([{action:'upsert',table:tbl,row:o},auditOp((old?'แก้ไข: ':'เพิ่ม: ')+desc)]))toast(old?'บันทึกการแก้ไขแล้ว':'บันทึกแล้ว');
+}
+async function del(k,id){
+  const tbl={leave:'leaves',sale:'sales',swap:'swaps',warning:'warnings',employee:'employees'}[k];const r=db[tbl].find(x=>x.id===id);if(!r)return;
+  if(k==='employee'){const used=db.leaves.some(l=>l.empId===id)||db.sales.some(x=>x.sellerId===id||x.buyerId===id)||db.swaps.some(x=>x.aId===id||x.bId===id)||db.warnings.some(x=>x.empId===id);
+    if(used)return toast('พนักงานคนนี้มีประวัติอยู่ ลบไม่ได้ ให้เปลี่ยนสถานะเป็นลาออกแล้วแทน')}
+  const why=prompt('เหตุผลที่ลบ (จะถูกเก็บในประวัติการแก้ไข)');if(why===null)return;
+  const label={leave:()=>`${LEAVE[r.type]} ${ename(r.empId)} ${fd(r.start)} ${fmt(n(r.days))} วัน`,sale:()=>`ขายเวร ${fd(r.date)} ${ename(r.sellerId)} → ${ename(r.buyerId)}`,swap:()=>`แลกเวร ${ename(r.aId)} ⇄ ${ename(r.bId)} ${fd(r.aDate)}`,warning:()=>`ใบเตือน ${ename(r.empId)} ${fd(r.date)}`,employee:()=>`พนักงาน ${r.name}`}[k]();
+  $('#dlg').close();
+  if(await commit([{action:'delete',table:tbl,id},auditOp(`ลบ: ${label}${why?' (เหตุผล: '+why+')':''}`)]))toast('ลบแล้ว');
+}
+function openDetail(id){
+  const e=emp(id);if(!e)return;const s=summary(e),Q=db.settings.quota;
+  const ev=[];
+  db.leaves.filter(l=>l.empId===id&&inYear(l.start)).forEach(l=>ev.push([l.start,itemLeave(l)]));
+  db.sales.filter(x=>(x.sellerId===id||x.buyerId===id)&&inYear(x.date)).forEach(x=>ev.push([x.date,itemSale(x)]));
+  db.swaps.filter(x=>(x.aId===id||x.bId===id)&&(inYear(x.aDate)||inYear(x.bDate))).forEach(x=>ev.push([x.aDate,itemSwap(x)]));
+  db.warnings.filter(x=>x.empId===id&&inYear(x.date)).forEach(x=>ev.push([x.date,itemWarn(x)]));
+  ev.sort((a,b)=>b[0].localeCompare(a[0]));
+  const d=$('#dlg');
+  d.innerHTML=`<div class="mhead"><h2>${esc(e.name)}${e.nick?' ('+esc(e.nick)+')':''}</h2><button type="button" class="btn small" data-act="close">ปิด</button></div>
+  <div class="mbody"><dl class="kv"><dt>สาขา / ตำแหน่ง</dt><dd>${esc(e.branch||'-')} / ${esc(e.position||'-')}</dd><dt>รหัส</dt><dd>${esc(e.code||'-')}</dd><dt>เริ่มงาน</dt><dd>${fd(e.startDate)} (อายุงาน ${tenureTxt(e)})</dd><dt>สรุปปี</dt><dd>${be(st.year)}</dd></dl>
+  <table class="mini" style="margin:14px 0"><thead><tr><th>ประเภท</th><th>ใช้ไป</th><th>สิทธิ์</th><th>คงเหลือ</th></tr></thead><tbody>
+  ${[['sick',Q.sick],['personal',Q.personal],['vacation',s.vacEnt],['maternity',Q.maternity]].map(([k,q])=>`<tr><td><i class="swatch" style="background:${LCOLOR[k]}"></i>${LEAVE[k]}</td><td class="num ${s[k]>q?'over':''}">${fmt(s[k])}</td><td class="num">${q}</td><td class="num">${fmt(Math.max(q-s[k],0))}</td></tr>`).join('')}
+  <tr><td>ลาไม่รับค่าจ้าง / อื่นๆ</td><td class="num">${fmt(s.unpaid)} / ${fmt(s.other)}</td><td>-</td><td>-</td></tr>
+  <tr><td>ขายเวร / รับซื้อเวร / แลกเวร</td><td class="num" colspan="3">${s.sold} / ${s.bought} / ${s.swaps} ครั้ง</td></tr>
+  <tr><td>ใบเตือน</td><td class="num ${s.warns?'over':''}" colspan="3">${s.warns} ครั้ง</td></tr></tbody></table>
+  <h2 style="font-size:16px">รายการทั้งหมดในปี</h2><div class="list">${ev.map(x=>x[1]).join('')||'<div class="empty">ไม่มีรายการในปีนี้</div>'}</div>
+  <p class="hint" style="margin-top:12px">พิมพ์เมื่อ ${fdt(new Date().toISOString())}</p></div>
+  <div class="mfoot"><button type="button" class="btn" data-act="print">พิมพ์ / บันทึก PDF</button><button type="button" class="btn primary" data-act="close">ปิด</button></div>`;
+  d.showModal();
+}
+
+/* ---------- export ---------- */
+function csv(name,rows){
+  const s='\ufeff'+rows.map(r=>r.map(v=>{v=String(v??'');return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}).join(',')).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([s],{type:'text/csv;charset=utf-8'}));a.download=name;document.body.appendChild(a);a.click();a.remove();
+}
+function csvSummary(){const Q=db.settings.quota;csv(`สรุปการลา-${be(st.year)}.csv`,[['รหัส','ชื่อ','ชื่อเล่น','สาขา','ตำแหน่ง','วันเริ่มงาน','อายุงาน','ลาป่วย',`สิทธิ์(${Q.sick})`,'ลากิจ',`สิทธิ์(${Q.personal})`,'ลาพักร้อน','สิทธิ์พักร้อน','คงเหลือพักร้อน','ลาคลอด','ลาไม่รับค่าจ้าง','ลาอื่นๆ','ขายเวร(ครั้ง)','รับซื้อเวร(ครั้ง)','แลกเวร(ครั้ง)','ใบเตือน']].concat(filteredEmps().map(e=>{const s=summary(e);return [e.code,e.name,e.nick,e.branch,e.position,e.startDate,tenureTxt(e),s.sick,Q.sick,s.personal,Q.personal,s.vacation,s.vacEnt,Math.max(s.vacEnt-s.vacation,0),s.maternity,s.unpaid,s.other,s.sold,s.bought,s.swaps,s.warns]})))}
+function recCsvRows(k){
+  const nm=id=>emp(id)?.name||'',br=id=>emp(id)?.branch||'';
+  if(k==='leave')return [['วันเริ่ม','วันสิ้นสุด','จำนวนวัน','ครึ่งวัน','ประเภท','ชื่อ','สาขา','เหตุผล','เลขที่ใบลา','ผู้อนุมัติ','หมายเหตุ','บันทึกเมื่อ']].concat(recRows('leave').map(l=>[l.start,l.end,l.days,l.half,LEAVE[l.type],nm(l.empId),br(l.empId),l.reason,l.docNo,l.approver,l.note,l.createdAt]));
+  if(k==='sale')return [['วันที่เวร','เวร','ผู้ขาย','ผู้รับซื้อ','ราคา','เลขที่เอกสาร','ผู้อนุมัติ','หมายเหตุ','บันทึกเมื่อ']].concat(recRows('sale').map(x=>[x.date,x.shift,nm(x.sellerId),nm(x.buyerId),x.price,x.docNo,x.approver,x.note,x.createdAt]));
+  if(k==='swap')return [['คนที่ 1','วันที่เวรคนที่ 1','เวรคนที่ 1','คนที่ 2','วันที่เวรคนที่ 2','เวรคนที่ 2','เลขที่เอกสาร','ผู้อนุมัติ','หมายเหตุ','บันทึกเมื่อ']].concat(recRows('swap').map(x=>[nm(x.aId),x.aDate,x.aShift,nm(x.bId),x.bDate,x.bShift,x.docNo,x.approver,x.note,x.createdAt]));
+  return [['วันที่','ชื่อ','สาขา','ระดับ','เรื่อง','รายละเอียด','เลขที่','บันทึกเมื่อ']].concat(recRows('warning').map(x=>[x.date,nm(x.empId),br(x.empId),x.level,x.topic,x.detail,x.docNo,x.createdAt]));
+}
+
+/* ---------- sample ---------- */
+async function sample(){
+  const y=st.year,d=(m,dd)=>`${y}-${String(m).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
+  const E=[['ศิริพร ใจดี','พร','สาขา 1','ผู้ช่วยพยาบาล','2019-03-01'],['มานพ คำแสน','นพ','สาขา 1','ผู้ช่วยพยาบาล','2024-06-15'],['กัญญา ศรีวงศ์','ญา','สาขา 2','พยาบาลวิชาชีพ','2021-01-10'],['อรุณี ทองมา','ณี','สาขา 5 แทรงควิลา','ผู้ดูแลผู้สูงอายุ','2023-08-01']].map((a,i)=>({id:uid()+i,name:a[0],nick:a[1],branch:a[2],position:a[3],startDate:a[4],status:'active',code:'EMP'+(101+i)}));
+  const at=new Date().toISOString();
+  const ops=E.map(e=>({action:'upsert',table:'employees',row:e}));
+  [[0,'vacation',d(2,10),d(2,12),3],[0,'sick',d(4,3),d(4,3),1],[1,'personal',d(5,20),d(5,20),1],[2,'vacation',d(3,1),d(3,1),0.5,'am'],[3,'sick',d(6,8),d(6,9),2]].forEach((a,i)=>ops.push({action:'upsert',table:'leaves',row:{id:uid()+'l'+i,empId:E[a[0]].id,type:a[1],start:a[2],end:a[3],days:a[4],half:a[5]||'',approver:'หัวหน้าสาขา',docNo:'L-'+(i+1),createdAt:at}}));
+  ops.push({action:'upsert',table:'sales',row:{id:uid()+'s',sellerId:E[1].id,buyerId:E[0].id,date:d(5,22),shift:'ดึก',price:600,approver:'หัวหน้าสาขา',createdAt:at}});
+  ops.push({action:'upsert',table:'swaps',row:{id:uid()+'w',aId:E[2].id,aDate:d(7,4),aShift:'เช้า',bId:E[3].id,bDate:d(7,6),bShift:'บ่าย',approver:'หัวหน้าสาขา',createdAt:at}});
+  ops.push(auditOp('ใส่ข้อมูลตัวอย่างสำหรับทดลองใช้'));
+  await commit(ops);toast('ใส่ข้อมูลตัวอย่างแล้ว ลบหรือแก้ได้ตามสะดวก');
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click',async ev=>{
+  const b=ev.target.closest('[data-act]');if(!b)return;const a=b.dataset.act;
+  if(a==='tab'){st.view=b.dataset.k;render();try{window.scrollTo(0,0)}catch(e){}}
+  else if(a==='yr'){st.year+=+b.dataset.d;render()}
+  else if(a==='rec'){st.rec=b.dataset.k;render()}
+  else if(a==='form')openForm(b.dataset.k,b.dataset.id);
+  else if(a==='detail')openDetail(b.dataset.id);
+  else if(a==='close')$('#dlg').close();
+  else if(a==='del')del(b.dataset.k,b.dataset.id);
+  else if(a==='print'){document.body.classList.add('printing');window.print();setTimeout(()=>document.body.classList.remove('printing'),500)}
+  else if(a==='csvSummary')csvSummary();
+  else if(a==='csvRec')csv(`${REC.find(r=>r[0]===st.rec)[1]}-${be(st.year)}.csv`,recCsvRows(st.rec));
+  else if(a==='csvAll')REC.forEach(([k,l],i)=>setTimeout(()=>csv(`${l}-${be(st.year)}.csv`,recCsvRows(k)),i*400));
+  else if(a==='backup'){const blob=new Blob([JSON.stringify(db,null,1)],{type:'application/json'});const x=document.createElement('a');x.href=URL.createObjectURL(blob);x.download=`สำรองทะเบียนลา-${todayISO()}.json`;x.click()}
+  else if(a==='sample')sample();
+  else if(a==='pushLocal'){const d=lsGet(LS);if(!d||!confirm('ส่งข้อมูลที่เก็บในเครื่องนี้ขึ้น Google Sheets ทั้งหมด?'))return;const ops=[];TABLES.forEach(t=>(d[t]||[]).forEach(r=>ops.push({action:'upsert',table:t,row:r})));ops.push(auditOp('ย้ายข้อมูลจากเครื่องขึ้น Google Sheets '+ops.length+' รายการ'));if(await commit(ops))toast('ย้ายข้อมูลขึ้นชีตแล้ว')}
+});
+document.addEventListener('input',ev=>{
+  const t=ev.target;
+  if(t.dataset.act==='q'){st.q=t.value;const pos=t.selectionStart;render();const n2=$('[data-act="q"]');if(n2){n2.focus();n2.setSelectionRange(pos,pos)}}
+  if(t.name==='days')t.dataset.manual='1';
+  if(t.closest('form[data-form="leave"]'))leaveHint();
+});
+document.addEventListener('change',async ev=>{
+  const t=ev.target,a=t.dataset.act;
+  if(a==='branch'){st.branch=t.value;render()}
+  if(a==='resigned'){st.showResigned=t.checked;render()}
+  if(a==='lookDate'){st.lookDate=t.value||todayISO();render()}
+  if(a==='lookMonth'){st.lookMonth=t.value||todayISO().slice(0,7);render()}
+  if(t.hasAttribute('data-calc')){if(t.name!=='half'||true){const f=t.form;if(t.name==='start'&&f.elements.namedItem('end').value<t.value)f.elements.namedItem('end').value=t.value}delete t.form.elements.namedItem('days').dataset.manual;calcDays()}
+  if(a==='restore'&&t.files[0]){try{const d=JSON.parse(await t.files[0].text());if(!confirm('นำเข้าข้อมูลจากไฟล์สำรอง? รายการที่ id ซ้ำจะถูกแทนที่'))return;const ops=[];TABLES.forEach(x=>(d[x]||[]).forEach(r=>ops.push({action:'upsert',table:x,row:r})));if(d.settings)ops.push({action:'upsert',table:'settings',row:{id:'main',json:JSON.stringify(d.settings)}});ops.push(auditOp('นำเข้าไฟล์สำรอง '+ops.length+' รายการ'));if(await commit(ops))toast('นำเข้าข้อมูลแล้ว')}catch(e){toast('ไฟล์ไม่ถูกต้อง: '+e.message)}}
+});
+document.addEventListener('submit',ev=>{ev.preventDefault();submit(ev.target)});
+$('#dlg').addEventListener('close',()=>document.body.classList.remove('printing'));
+load();
+</script>
+</body>
+</html>
