@@ -176,7 +176,6 @@ table.mini th{background:var(--accent);color:#000;font-weight:700;font-size:12px
 <script>
 /* ---------- config ---------- */
 const API_URL='https://script.google.com/macros/s/AKfycbzMBsckTXSmeR4r3DWGr0s6WxKhrk3cgZvzBY17H6om8sHZRQ87enb5er-b_3NiQt6U/exec';
-const API_KEY='1234567890'; // ต้องตรงกับ SECRET ใน Code.gs
 const LS='leaveLedger_v1', LS_CONN='leaveLedger_conn', LS_CACHE='leaveLedger_cache';
 const DEFAULT_SETTINGS={
   org:'เชียงใหม่เนอร์สซิ่งโฮมแคร์ และ แทรงควิลา เอลเดอร์ลี่แคร์',
@@ -199,7 +198,14 @@ const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 let db={employees:[],leaves:[],sales:[],swaps:[],warnings:[],audit:[],settings:clone(DEFAULT_SETTINGS)};
 let conn=Object.assign({apiUrl:API_URL,apiKey:'',user:''},lsGet(LS_CONN)||{});
 if(!conn.apiUrl)conn.apiUrl=API_URL;
-if(!conn.apiKey)conn.apiKey=API_KEY;
+const SS_KEY='leaveLedger_key';
+const ssGet=()=>{try{return sessionStorage.getItem(SS_KEY)||''}catch(e){return ''}};
+const ssSet=v=>{try{v?sessionStorage.setItem(SS_KEY,v):sessionStorage.removeItem(SS_KEY)}catch(e){}};
+try{localStorage.removeItem(LS_CACHE)}catch(e){}
+if(!conn.remember)conn.apiKey=ssGet();
+function saveConn(){lsSet(LS_CONN,Object.assign({},conn,{apiKey:conn.remember?conn.apiKey:''}));ssSet(conn.apiKey)}
+function logout(){conn.apiKey='';conn.remember=false;saveConn();ssSet('');TABLES.forEach(t=>db[t]=[]);$('#dlg').close();gate='ออกจากระบบแล้ว';lockUI();render()}
+function lockUI(){setMode('error');$('#mode span').textContent='ยังไม่ได้เข้าสู่ระบบ'}
 let gate='';
 let st={view:'overview',rec:'leave',year:new Date().getFullYear(),branch:'',q:'',lookDate:todayISO(),lookMonth:todayISO().slice(0,7),showResigned:false};
 
@@ -233,7 +239,7 @@ function setMode(m){const el=$('#mode');el.className='mode '+m;el.querySelector(
 function mergeSettings(s){const o=clone(DEFAULT_SETTINGS);Object.assign(o,s||{});o.quota=Object.assign(clone(DEFAULT_SETTINGS.quota),(s||{}).quota||{});return o}
 async function load(){
   gate='';
-  if(conn.apiUrl&&!conn.apiKey){gate='ใส่รหัสลับครั้งแรกครั้งเดียว ระบบจะจำไว้ในเครื่องนี้';setMode('error');$('#mode span').textContent='รอใส่รหัสลับ';render();return}
+  if(conn.apiUrl&&!conn.apiKey){gate='ใส่รหัสเพื่อเข้าใช้งาน';lockUI();render();return}
   if(conn.apiUrl){
     try{
       const r=await fetch(conn.apiUrl+(conn.apiUrl.includes('?')?'&':'?')+'key='+encodeURIComponent(conn.apiKey));
@@ -241,11 +247,10 @@ async function load(){
       TABLES.forEach(t=>db[t]=j.data[t]||[]);
       const s=(j.data.settings||[]).find(x=>x.id==='main');
       db.settings=mergeSettings(s&&s.json?JSON.parse(s.json):null);
-      lsSet(LS_CACHE,db);setMode('online');
+      setMode('online');
     }catch(e){
-      if(/รหัสลับ/.test(e.message)){gate='รหัสลับไม่ถูกต้อง ลองใส่ใหม่อีกครั้ง';setMode('error');$('#mode span').textContent='รหัสลับไม่ถูกต้อง';render();return}
+      if(/รหัสลับ/.test(e.message)){conn.apiKey='';conn.remember=false;saveConn();gate='รหัสไม่ถูกต้อง ลองใส่ใหม่อีกครั้ง';lockUI();render();return}
       setMode('error');toast('เชื่อมต่อ Google Sheets ไม่ได้: '+e.message);
-      const c=lsGet(LS_CACHE);if(c){Object.assign(db,c);db.settings=mergeSettings(c.settings)}
     }
   }else{
     const d=lsGet(LS);if(d){TABLES.forEach(t=>db[t]=d[t]||[]);db.settings=mergeSettings(d.settings)}
@@ -266,7 +271,6 @@ async function commit(ops){
     try{
       const r=await fetch(conn.apiUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:conn.apiKey,action:'bulk',ops})});
       const j=await r.json();if(!j.ok)throw new Error(j.error||'ไม่ทราบสาเหตุ');
-      lsSet(LS_CACHE,db);
     }catch(e){toast('บันทึกขึ้นชีตไม่สำเร็จ: '+e.message);await load();return false}
     finally{$('#busy').classList.remove('on')}
   }else lsSet(LS,db);
@@ -297,7 +301,7 @@ const frac=(u,q)=>`<span class="num frac ${u>q?'over':''}">${fmt(u)}<small>/${q}
 function render(){
   $('#orgName').textContent=db.settings.org||'';
   $('#yearLabel').textContent='ปี '+be(st.year);
-  $('#tabs').innerHTML=TABS.map(([k,l])=>`<button type="button" data-act="tab" data-k="${k}" aria-current="${st.view===k}">${l}</button>`).join('');
+  $('#tabs').innerHTML=gate?'':TABS.map(([k,l])=>`<button type="button" data-act="tab" data-k="${k}" aria-current="${st.view===k}">${l}</button>`).join('')+(gate?'':`<button type="button" data-act="logout" style="margin-left:auto">ออกจากระบบ</button>`);
   if(gate){$('#view').innerHTML=vGate();return}
   const v={overview:vOverview,records:vRecords,lookup:vLookup,employees:vEmployees,audit:vAudit,settings:vSettings}[st.view];
   $('#view').innerHTML=v();
@@ -424,9 +428,10 @@ function vAudit(){
 }
 function vGate(){
   return `<form class="panel" data-form="key" style="max-width:460px;margin:20px auto"><h2>เข้าสู่ระบบ</h2><p class="sub">${esc(gate)}</p>
-  <div class="grid2"><label class="f full">รหัสลับ (SECRET ใน Code.gs)<input class="inp" name="apiKey" type="password" required autocomplete="current-password"></label>
-  <label class="f full">ชื่อผู้บันทึก (แสดงในประวัติการแก้ไข)<input class="inp" name="user" value="${esc(conn.user)}" placeholder="เช่น คุณต้น"></label></div>
-  <div class="bar" style="margin:16px 0 0"><button class="btn primary">เชื่อมต่อ</button></div></form>`;
+  <div class="grid2"><label class="f full">รหัสเข้าใช้งาน<input class="inp" name="apiKey" type="password" required autofocus autocomplete="current-password"></label>
+  <label class="f full">ชื่อผู้บันทึก (แสดงในประวัติการแก้ไข)<input class="inp" name="user" value="${esc(conn.user)}" placeholder="เช่น คุณต้น"></label>
+  <label class="full" style="display:flex;gap:8px;align-items:center;font-size:14px"><input type="checkbox" name="remember" value="1"> จำรหัสไว้ในเครื่องนี้ (ใช้กับเครื่องส่วนตัวเท่านั้น)</label></div>
+  <div class="bar" style="margin:16px 0 0"><button class="btn primary">เข้าสู่ระบบ</button></div></form>`;
 }
 function vSettings(){
   const s=db.settings;
@@ -446,7 +451,6 @@ function vSettings(){
   <p class="sub">ตอนนี้${conn.apiUrl?'เชื่อมกับชีตอยู่':'ข้อมูลเก็บในเบราว์เซอร์เครื่องนี้เท่านั้น ถ้าล้างเบราว์เซอร์ข้อมูลจะหาย'} วาง URL ของ Apps Script ที่ Deploy แล้ว เพื่อเก็บข้อมูลถาวรใน Google Sheets</p>
   <div class="grid2">
     <label class="f full">Web App URL<input class="inp" name="apiUrl" value="${esc(conn.apiUrl)}" placeholder="https://script.google.com/macros/s/.../exec"><span class="hint">ฝังลิงก์ไว้ในแอปแล้ว ไม่ต้องแก้</span></label>
-    <label class="f">รหัสลับ (ตรงกับ SECRET ใน Code.gs)<input class="inp" name="apiKey" type="password" value="${esc(conn.apiKey)}"></label>
     <label class="f">ชื่อผู้บันทึก (แสดงในประวัติ)<input class="inp" name="user" value="${esc(conn.user)}" placeholder="เช่น คุณต้น"></label>
   </div><div class="bar" style="margin:14px 0 0"><button class="btn primary">บันทึกและเชื่อมต่อ</button>
   ${conn.apiUrl&&lsGet(LS)?'<button type="button" class="btn" data-act="pushLocal">ย้ายข้อมูลจากเครื่องนี้ขึ้นชีต</button>':''}</div></form>
@@ -525,8 +529,8 @@ async function submit(f){
     s.vacationRules=o.vac.split('\n').map(l=>l.split('=')).filter(p=>p.length===2&&p[0].trim()!=='').map(p=>({min:n(p[0]),days:n(p[1])}));
     ['branches','shifts','warnLevels'].forEach(x=>s[x]=o[x].split('\n').map(v=>v.trim()).filter(Boolean));
     if(await commit([{action:'upsert',table:'settings',row:{id:'main',json:JSON.stringify(s)}},auditOp('แก้ไขการตั้งค่าสิทธิ์การลา')]))toast('บันทึกการตั้งค่าแล้ว');return}
-  if(k==='key'){const o=readForm(f);conn.apiKey=o.apiKey;conn.user=o.user;lsSet(LS_CONN,conn);await load();if($('#mode').classList.contains('online'))toast('เชื่อมต่อ Google Sheets แล้ว');return}
-  if(k==='conn'){const o=readForm(f);conn={apiUrl:o.apiUrl||API_URL,apiKey:o.apiKey,user:o.user};lsSet(LS_CONN,conn);toast(conn.apiUrl?'กำลังเชื่อมต่อ…':'ใช้การเก็บข้อมูลในเครื่องนี้');await load();if(conn.apiUrl&&$('#mode').classList.contains('online'))toast('เชื่อมต่อ Google Sheets แล้ว');return}
+  if(k==='key'){const o=readForm(f);conn.apiKey=o.apiKey;conn.user=o.user;conn.remember=!!o.remember;saveConn();await load();if($('#mode').classList.contains('online'))toast('เชื่อมต่อ Google Sheets แล้ว');return}
+  if(k==='conn'){const o=readForm(f);conn.apiUrl=o.apiUrl||API_URL;conn.user=o.user;saveConn();toast(conn.apiUrl?'กำลังเชื่อมต่อ…':'ใช้การเก็บข้อมูลในเครื่องนี้');await load();if(conn.apiUrl&&$('#mode').classList.contains('online'))toast('เชื่อมต่อ Google Sheets แล้ว');return}
   const tbl={leave:'leaves',sale:'sales',swap:'swaps',warning:'warnings',employee:'employees'}[k];
   const id=f.dataset.id;const old=id?db[tbl].find(x=>x.id===id):null;
   const o=Object.assign({},old||{},readForm(f),{id:id||uid(),updatedAt:new Date().toISOString()});if(!old)o.createdAt=o.updatedAt;
@@ -611,6 +615,7 @@ document.addEventListener('click',async ev=>{
   else if(a==='form')openForm(b.dataset.k,b.dataset.id,b.dataset.emp);
   else if(a==='detail')openDetail(b.dataset.id);
   else if(a==='close')$('#dlg').close();
+  else if(a==='logout'){if(confirm('ออกจากระบบ?'))logout()}
   else if(a==='del')del(b.dataset.k,b.dataset.id);
   else if(a==='print'){document.body.classList.add('printing');window.print();setTimeout(()=>document.body.classList.remove('printing'),500)}
   else if(a==='csvSummary')csvSummary();
